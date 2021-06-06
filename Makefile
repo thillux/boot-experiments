@@ -73,12 +73,6 @@ kernel_modules: kernel initrd_inst initrd_bt
 	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_inst" modules_install
 	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_boot" modules_install
 
-grub-efi:
-	grub-mkstandalone \
-    --directory /usr/lib/grub/x86_64-efi \
-    --format x86_64-efi \
-	--output build/bootx64.efi
-
 efi-keys:
 	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) PK/" -keyout PK.key -out PK.crt -days 3650 -nodes -sha256
 	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) KEK/" -keyout KEK.key -out KEK.crt -days 3650 -nodes -sha256
@@ -94,3 +88,6 @@ efi-keys:
 
 ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
 	$(CC) $(CFLAGS) -DWANT_ALTERNATE_PTABLE=1 -o build/ptgen ptgen/ptgen.c ptgen/crc32.c
+
+image:
+	python3 createImage.py
