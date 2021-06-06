@@ -86,3 +86,6 @@ efi-keys:
 	cert-to-efi-sig-list -g $(EFI_GUID) DB.crt DB.esl
 	sign-efi-sig-list -t "$(shell date --date='1 second' +'%Y-%m-%d %H:%M:%S')" -k PK.key -c PK.crt PK PK.esl PK.auth
 	chmod 0600 *.key
+
+ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
+	$(CC) $(CFLAGS) -DWANT_ALTERNATE_PTABLE=1 -o build/ptgen ptgen/ptgen.c ptgen/crc32.c

@@ -8,4 +8,4 @@ cd ${INITRD_PATH}
 
 mknod dev/console c 5 1
 
-find . | cpio -H newc -o > ../build/${INITRD_PATH}.img
+find . | cpio -H newc -o | zstd > ../build/${INITRD_PATH}.img.zstd
