@@ -34,8 +34,7 @@ initrd_inst: build initrd_install_dir
 	   etc/securetty \
 	   etc/udhcpd.conf \
 	   usr/share/udhcpc/default.script)
-	(cd initrd_install && \
-	 find . | cpio -H newc -o > ../build/initrd_install.img)
+	fakeroot scripts/mk_initrd.sh initrd_install
 
 initrd_bt: build initrd_boot_dir
 	$(APK) $(APK_OPTS) --initdb -p initrd_boot add \
@@ -51,8 +50,7 @@ initrd_bt: build initrd_boot_dir
 	   etc/securetty \
 	   etc/udhcpd.conf \
 	   usr/share/udhcpc/default.script)
-	(cd initrd_boot && \
-	 find . | cpio -H newc -o > ../build/initrd_boot.img)
+	fakeroot scripts/mk_initrd.sh initrd_boot
 
 linux:
 	git clone --depth=1 --branch v$(KERNEL_VERSION) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
