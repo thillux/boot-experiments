@@ -3,10 +3,19 @@ APK_OPTS := --repositories-file apk/repositories -U --allow-untrusted --no-scrip
 KERNEL_VERSION := 5.12.9
 NUM_CORES := $(shell nproc)
 
-all: build initrd_inst initrd_bt
+EFI_KEY_CN_PREFIX = Test
+EFI_GUID := $(shell python -c 'import uuid; print str(uuid.uuid1())')
+
+all: build initrd_inst initrd_bt kernel grub-efi
 
 clean:
-	rm -rf build initrd_install initrd_boot linux
+	rm -rf \
+		build \
+		initrd_install initrd_boot \
+		linux \
+		*.key \
+		*.cer \
+		*.crt
 
 build:
 	mkdir -p build
@@ -58,3 +67,22 @@ linux:
 kernel: linux
 	cp configs/kernel-config linux/.config
 	(cd linux && make olddefconfig && make -j$(NUM_CORES))
+
+grub-efi:
+	grub-mkstandalone \
+    --directory /usr/lib/grub/x86_64-efi \
+    --format x86_64-efi \
+	--output build/bootx64.efi
+
+efi-keys:
+	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) PK/" -keyout PK.key -out PK.crt -days 3650 -nodes -sha256
+	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) KEK/" -keyout KEK.key -out KEK.crt -days 3650 -nodes -sha256
+	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) DB/" -keyout DB.key -out DB.crt -days 3650 -nodes -sha256
+	openssl x509 -in PK.crt -out PK.cer -outform DER
+	openssl x509 -in KEK.crt -out KEK.cer -outform DER
+	openssl x509 -in DB.crt -out DB.cer -outform DER
+	cert-to-efi-sig-list -g $(EFI_GUID) PK.crt PK.esl
+	cert-to-efi-sig-list -g $(EFI_GUID) KEK.crt KEK.esl
+	cert-to-efi-sig-list -g $(EFI_GUID) DB.crt DB.esl
+	sign-efi-sig-list -t "$(shell date --date='1 second' +'%Y-%m-%d %H:%M:%S')" -k PK.key -c PK.crt PK PK.esl PK.auth
+	chmod 0600 *.key
