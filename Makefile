@@ -66,7 +66,12 @@ linux:
 
 kernel: linux
 	cp configs/kernel-config linux/.config
-	(cd linux && make olddefconfig && make -j$(NUM_CORES))
+	$(MAKE) -C linux olddefconfig
+	$(MAKE) -C linux -j$(NUM_CORES)
+
+kernel_modules: kernel initrd_inst initrd_bt
+	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_inst" modules_install
+	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_boot" modules_install
 
 grub-efi:
 	grub-mkstandalone \
