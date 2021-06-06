@@ -73,6 +73,10 @@ kernel_modules: kernel initrd_inst initrd_bt
 	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_inst" modules_install
 	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_boot" modules_install
 
+intel_ucode:
+	git clone --depth=1 https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files intel_ucode
+	/sbin/iucode_tool -v --write-earlyfw=$(CURDIR)/build/intel-ucode.img intel_ucode/intel-ucode
+
 efi-keys:
 	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) PK/" -keyout PK.key -out PK.crt -days 3650 -nodes -sha256
 	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) KEK/" -keyout KEK.key -out KEK.crt -days 3650 -nodes -sha256
