@@ -95,7 +95,7 @@ ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
 	$(CC) $(CFLAGS) -DWANT_ALTERNATE_PTABLE=1 -o build/ptgen ptgen/ptgen.c ptgen/crc32.c
 
 image:
-	python3 createImage.py
+	python3 scripts/createImage.py
 
 vm-bios:
 	qemu-system-x86_64 \
