@@ -44,8 +44,7 @@ initrd_inst: build initrd_install_dir
 	   etc/securetty \
 	   etc/udhcpd.conf \
 	   usr/share/udhcpc/default.script)
-	fakeroot scripts/mk_initrd.sh initrd_install
-
+	
 initrd_bt: build initrd_boot_dir
 	$(APK) $(APK_OPTS) --initdb -p initrd_boot add \
 		lvm2 \
@@ -60,7 +59,6 @@ initrd_bt: build initrd_boot_dir
 	   etc/securetty \
 	   etc/udhcpd.conf \
 	   usr/share/udhcpc/default.script)
-	fakeroot scripts/mk_initrd.sh initrd_boot
 
 linux:
 	git clone --depth=1 --branch v$(KERNEL_VERSION) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
@@ -79,6 +77,9 @@ intel_ucode:
 	git clone --depth=1 https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files intel_ucode
 	/sbin/iucode_tool -v --write-earlyfw=$(CURDIR)/build/intel-ucode.img intel_ucode/intel-ucode
 
+init_bin: linuxrc/src/main.rs
+	cargo install --target x86_64-unknown-linux-musl --path linuxrc --root $(CURDIR)/build/
+
 efi-keys:
 	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) PK/" -keyout PK.key -out PK.crt -days 3650 -nodes -sha256
 	openssl req -new -x509 -newkey rsa:4096 -subj "/CN=$(EFI_KEY_CN_PREFIX) KEK/" -keyout KEK.key -out KEK.crt -days 3650 -nodes -sha256
@@ -96,6 +97,10 @@ ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
 	$(CC) $(CFLAGS) -DWANT_ALTERNATE_PTABLE=1 -o build/ptgen ptgen/ptgen.c ptgen/crc32.c
 
 image:
+	cp build/bin/linuxrc initrd_install/init
+	cp build/bin/linuxrc initrd_boot/init
+	fakeroot scripts/mk_initrd.sh initrd_install
+	fakeroot scripts/mk_initrd.sh initrd_boot
 	python3 scripts/createImage.py
 
 vm-bios:
@@ -114,8 +119,8 @@ vm-efi:
 		-m 1024 \
 		-smp 2 \
 		-cpu host \
-		-serial stdio \
 		-device virtio-gpu-pci \
+		-serial stdio \
 		-drive file=build/image_install.raw,format=raw,if=virtio \
 		-drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
 		-net none

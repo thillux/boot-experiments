@@ -13,7 +13,7 @@ insmod fat
 
 set color_normal=light-gray/black
 set menu_color_normal=light-gray/blue
-set menu_color_highlight=light-gray/light-red
+set menu_color_highlight=white/red
 
 set timeout_style=menu
 set timeout=5
@@ -23,7 +23,7 @@ menuentry 'Linux' {
     search --no-floppy --set=root --fs-uuid {{fs_uuid}}
     
     echo "Load Linux"
-    linux /bzImage
+    linux /bzImage root=/dev/ram0 console=ttyS0
 
     echo "Load initramfs"
     initrd /intel-ucode.img /{{initrd}}
