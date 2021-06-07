@@ -113,4 +113,4 @@ vm-efi:
 		-cpu host \
 		-drive file=build/image_install.raw,format=raw,if=virtio \
 		-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
-		-drive if=pflash,format=raw,readonly=on,file=ovmf/efivars.fd
+		-drive if=pflash,format=raw,file=ovmf/efivars.fd
