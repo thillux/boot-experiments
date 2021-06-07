@@ -97,10 +97,20 @@ ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
 image:
 	python3 createImage.py
 
-vm:
-	qemu-system-x86_64 --enable-kvm \
-					   --bios /usr/share/ovmf/OVMF.fd \
-					   -m 1024 \
-					   -smp 2 \
-					   -cpu host \
-					   -hda build/image_install.raw
+vm-bios:
+	qemu-system-x86_64 \
+		-machine q35,accel=kvm \
+		-m 1024 \
+		-smp 2 \
+		-cpu host \
+		-drive file=build/image_install.raw,format=raw,if=virtio
+
+vm-efi:
+	qemu-system-x86_64 \
+		-machine q35,accel=kvm \
+		-m 1024 \
+		-smp 2 \
+		-cpu host \
+		-drive file=build/image_install.raw,format=raw,if=virtio \
+		-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
+		-drive if=pflash,format=raw,readonly=on,file=ovmf/efivars.fd
