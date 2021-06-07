@@ -23,7 +23,7 @@ menuentry 'Linux' {
     search --no-floppy --set=root --fs-uuid {{fs_uuid}}
     
     echo "Load Linux"
-    linux /bzImage root=/dev/ram0 console=ttyS0
+    linux /bzImage console=ttyS0
 
     echo "Load initramfs"
     initrd /intel-ucode.img /{{initrd}}
