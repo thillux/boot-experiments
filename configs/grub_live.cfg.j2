@@ -1,0 +1,30 @@
+loadfont unicode
+set gfxmode=auto
+insmod all_video
+insmod gfxterm
+
+terminal_input console
+terminal_output gfxterm
+
+insmod gzio
+insmod part_gpt
+insmod ext2
+insmod fat
+
+set color_normal=light-gray/black
+set menu_color_normal=light-gray/blue
+set menu_color_highlight=light-gray/light-red
+
+set timeout_style=menu
+set timeout=5
+
+menuentry 'Linux' {
+    set gfxpayload=keep
+    search --no-floppy --set=root --fs-uuid {{fs_uuid}}
+    
+    echo "Load Linux"
+    linux /bzImage
+
+    echo "Load initramfs"
+    initrd /intel-ucode.img /{{initrd}}
+}

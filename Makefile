@@ -6,7 +6,7 @@ NUM_CORES := $(shell nproc)
 EFI_KEY_CN_PREFIX = Test
 EFI_GUID := $(shell python -c 'import uuid; print str(uuid.uuid1())')
 
-all: build initrd_inst initrd_bt kernel grub-efi
+all: build initrd_inst initrd_bt kernel ptgen_bin image
 
 clean:
 	rm -rf \
@@ -18,7 +18,7 @@ clean:
 		*.crt
 
 build:
-	mkdir -p build
+	mkdir -p build/efi/boot/
 
 initrd_install_dir:
 	mkdir -p initrd_install
@@ -66,6 +66,7 @@ linux:
 
 kernel: linux
 	cp configs/kernel-config linux/.config
+	cp arch/x86_64/boot/bzImage build/bzImage
 	$(MAKE) -C linux olddefconfig
 	$(MAKE) -C linux -j$(NUM_CORES)
 
@@ -95,3 +96,11 @@ ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
 
 image:
 	python3 createImage.py
+
+vm:
+	qemu-system-x86_64 --enable-kvm \
+					   --bios /usr/share/ovmf/OVMF.fd \
+					   -m 1024 \
+					   -smp 2 \
+					   -cpu host \
+					   -hda build/image_install.raw
