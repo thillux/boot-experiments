@@ -6,12 +6,13 @@ NUM_CORES := $(shell nproc)
 EFI_KEY_CN_PREFIX = Test
 EFI_GUID := $(shell python -c 'import uuid; print str(uuid.uuid1())')
 
-all: build initrd_inst initrd_bt kernel ptgen_bin image
+# use kernel_modules here, if you build with modules
+all: build initrd_inst initrd_bt intel_ucode kernel ptgen_bin image
 
 clean:
 	rm -rf \
 		build \
-		initrd_install initrd_boot \
+		initrd_inst initrd_boot intel_ucode \
 		linux \
 		*.key \
 		*.cer \
@@ -66,9 +67,9 @@ linux:
 
 kernel: linux
 	cp configs/kernel-config linux/.config
-	cp arch/x86_64/boot/bzImage build/bzImage
 	$(MAKE) -C linux olddefconfig
 	$(MAKE) -C linux -j$(NUM_CORES)
+	cp linux/arch/x86_64/boot/bzImage build/bzImage
 
 kernel_modules: kernel initrd_inst initrd_bt
 	$(MAKE) -C linux INSTALL_MOD_PATH="$(CURDIR)/initrd_inst" modules_install
@@ -103,14 +104,18 @@ vm-bios:
 		-m 1024 \
 		-smp 2 \
 		-cpu host \
+		-net none \
 		-drive file=build/image_install.raw,format=raw,if=virtio
 
 vm-efi:
 	qemu-system-x86_64 \
-		-machine q35,accel=kvm \
+		-machine q35 \
+		--enable-kvm \
 		-m 1024 \
 		-smp 2 \
 		-cpu host \
+		-serial stdio \
+		-device virtio-gpu-pci \
 		-drive file=build/image_install.raw,format=raw,if=virtio \
-		-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
-		-drive if=pflash,format=raw,file=ovmf/efivars.fd
+		-drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
+		-net none
