@@ -1,10 +1,10 @@
 APK := apk/apk.static
 APK_OPTS := --repositories-file apk/repositories -U --allow-untrusted --no-scripts
-KERNEL_VERSION := 5.12.9
+KERNEL_VERSION := 5.13.10
 NUM_CORES := $(shell nproc)
 
 EFI_KEY_CN_PREFIX = Test
-EFI_GUID := $(shell python -c 'import uuid; print str(uuid.uuid1())')
+EFI_GUID := $(shell python3 -c 'import uuid; print(str(uuid.uuid1()))')
 
 # use kernel_modules here, if you build with modules
 all: build initrd_inst initrd_bt intel_ucode kernel ptgen_bin image
@@ -96,7 +96,7 @@ efi-keys:
 ptgen_bin: ptgen/ptgen.c ptgen/crc32.c ptgen/crc32.h
 	$(CC) $(CFLAGS) -DWANT_ALTERNATE_PTABLE=1 -o build/ptgen ptgen/ptgen.c ptgen/crc32.c
 
-image:
+image: init_bin
 	cp build/bin/linuxrc initrd_install/init
 	cp build/bin/linuxrc initrd_boot/init
 	fakeroot scripts/mk_initrd.sh initrd_install
